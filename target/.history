@@ -1,0 +1,87 @@
+run
+compile
+run
+compile
+run
+rebuild
+compile
+run
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt C
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt ED
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt E D
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt C
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt Q
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A b
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A B
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A B C D E
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A C E
+run -improved /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A C E
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A C E
+run -improved /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A C E
+run -improved /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A
+run -improved /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A
+run -naive /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A
+run -improved /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt 
+run -improved /home/remi/ENS/DBDM/project1/src/main/resources/ex.CC1.txt A C E
+test
+clean
+compile
+test
+clean
+test
+run -generate 10
+test
+run -generate 10
+run -generate 100
+test
+compile
+test
+run -normalize ex.CC1.txt
+run -normalize /home/remi/ENS/DBDM/project1/ex.CC1.txt
+run -normalize src/main/resources/ex.CC1.txt
+run -improved generate500_shuffle.txt 100 30 23
+run -improved src/resources/generate500_shuffle.txt 100 30 23
+run -improved src/main/resources/generate500_shuffle.txt 100 30 23
+run -naive src/main/resources/generate500_shuffle.txt 100 30 23
+run -improved src/main/resources/generate500_shuffle.txt 100 30 23
+run -naive src/main/resources/generate1000.txt 100 30 23
+run -improved src/main/resources/generate1000.txt 100 30 23
+test
+run -improved src/main/resources/generate1000.txt 100 30 23
+test
+run -normalize src/main/resources/generate1000.txt
+run -normalize src/main/resources/ex.CC1.txt
+test
+run -normalize src/main/resources/ex.CC1.txt
+run -normalize src/main/resources/generate500.txt
+run -normalize src/main/resources/generate500_shuffle.txt
+run -normalize src/main/resources/generate100.txt
+test
+run -normalize src/main/resources/generate100.txt
+test
+run -normalize src/main/resources/generate100.txt
+run -normalize src/main/resources/ex.CC1.txt
+run -normalize src/main/resources/generate100.txt
+run -decompose src/main/resources/generate100.txt
+run -decompose src/main/resources/ex.CC1.txt
+test
+run -improved src/main/resources/ex.TD3.txt A
+run -improved src/main/resources/ex.TD3.txt A C
+run -improved src/main/resources/ex.TD3.txt C
+test
+run -generate 5
+test
+run -decompose /src/test/resources/generate5.txt
+run -decompose /src/test/resources/ex.CC1.txt
+run -decompose src/test/resources/ex.CC1.txt
+test
+compile
+test
+testOnly decompose
+test decompose
+test
