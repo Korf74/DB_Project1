@@ -17,7 +17,7 @@ class tests extends FunSuite {
     "/generate5.txt",
     "/generate100.txt"
     ).map(getClass.getResource(_).getPath)
-/*
+ 
   test("naive algorithm works for simple cases") {
     val atts1 = Attributes("A")
     val atts2 = Attributes("A", "E", "C")
@@ -86,7 +86,7 @@ class tests extends FunSuite {
         case(x, y) => Integer.parseInt(x.head.getName) == Integer.parseInt(y.head.getName) - 1
       })
     }
-  }*/
+  }
 
   test("decompose") {
       val sigma = newFromFile(path)
@@ -94,5 +94,4 @@ class tests extends FunSuite {
     println(sigma.normalize())
       println(sigma.decompose())
     }
-
 }

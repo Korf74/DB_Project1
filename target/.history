@@ -85,3 +85,15 @@ test
 testOnly decompose
 test decompose
 test
+run -naive /src/main/resources/ex.CC1.txt A C
+run -naive src/main/resources/ex.CC1.txt A C
+run -improved src/main/resources/ex.CC1.txt A C
+run -naive src/main/resources/generate100.txt 0
+run -naive src/main/resources/generate100.txt 50
+run -naive src/main/resources/generate500_shuffle.txt 50
+run -naive src/main/resources/generate500_shuffle.txt 0
+run -naive src/main/resources/generate1000.txt 0
+run -generate 3
+run -generate 1000
+run -normalize src/main/resources/ex.CC1.txt
+test
