@@ -13,13 +13,15 @@ class FunctionalDependencies(private val deps: Map[FunctionalDependencies.Attrib
 
   def getDependencies = deps
 
-  def schema = deps.foldLeft(Set.newBuilder[Attribute])((s, dep) => s ++= (dep._1 ++ dep._2)).result()
+  private lazy val schema = deps.foldLeft(Set.newBuilder[Attribute])((s, dep) => s ++= (dep._1 ++ dep._2)).result()
+
+  private val closures = mutable.Map.empty[Attributes, Attributes]
 
   def check(X: Attributes, Y: Attributes) = Y.subsetOf(closure(X))
 
   def isKey(X: Attributes) = check(X, schema)
 
-  def closure(X: Attributes) = FunctionalDependencies.closure(this, X)
+  def closure(X: Attributes) = closures.getOrElseUpdate(X, FunctionalDependencies.closure(this, X))
 
   def isBCNF(R: Attributes) = {
     deps
@@ -73,17 +75,20 @@ class FunctionalDependencies(private val deps: Map[FunctionalDependencies.Attrib
     val min: mutable.Map[Attributes, Attributes] = mutable.HashMap[Attributes, Attributes](deps.toList: _*)
 
     min.foreach{ case (x, y) =>
+
         val W = mutable.Set[Attribute](y.toList: _*)
 
+        val G = min.clone()
+
         y.foreach{ a =>
-          val G = (min - (x, y)) + ((x, (W - a).toSet))
+          G.update(x, (W - a).toSet)
+
           if(FunctionalDependencies.check(G, x, y)) {
             W -= a
           }
         }
 
-        min -= (x, y)
-        min += ((x, W.toSet))
+      min.update(x, W.toSet)
     }
 
     FunctionalDependencies(min)
@@ -140,8 +145,8 @@ object FunctionalDependencies {
 
   def check(sigma: FunctionalDependencies, X: Attributes, Y: Attributes): Boolean = sigma.check(X, Y)
 
-  private def check(sigma: mutable.Map[Attributes, Attributes], X: Attributes, Y: Attributes) =
-    Y.subsetOf(algo2(sigma.toMap,  X))
+  private def check(sigma: mutable.Map[Attributes, Attributes], X: Attributes, Y: Attributes): Boolean =
+    FunctionalDependencies(sigma).check(X, Y)
 
   def normalize(path: String) = {
     val sigma = newFromFile(path)

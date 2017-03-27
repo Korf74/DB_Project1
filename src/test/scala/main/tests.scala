@@ -13,11 +13,12 @@ class tests extends FunSuite {
   val path1 = getClass.getResource("/ex.TD3.txt").getPath
   val path2 = getClass.getResource("/generate100.txt").getPath
   val path3 = getClass.getResource("/generate5.txt").getPath
+  val path4 = getClass.getResource("/generate500_shuffle.txt").getPath
   val pathGenerate = List(
     "/generate5.txt",
     "/generate100.txt"
     ).map(getClass.getResource(_).getPath)
- 
+/*
   test("naive algorithm works for simple cases") {
     val atts1 = Attributes("A")
     val atts2 = Attributes("A", "E", "C")
@@ -83,7 +84,7 @@ class tests extends FunSuite {
       val n = sigma.normalize()
       println(n)
       assert(n.getDependencies.forall {
-        case(x, y) => Integer.parseInt(x.head.getName) == Integer.parseInt(y.head.getName) - 1
+        case(x, y) => Integer.parseInt(x.head.getName()) == Integer.parseInt(y.head.getName()) - 1
       })
     }
   }
@@ -93,5 +94,10 @@ class tests extends FunSuite {
     println(sigma.minimize())
     println(sigma.normalize())
       println(sigma.decompose())
-    }
+    }*/
+
+  test("sdfsdf") {
+    val sigma = newFromFile(path4)
+    println(sigma.minimize().reduce())
+  }
 }
