@@ -35,9 +35,11 @@ In the Algorithm 2, let's consider the For loop (line 9), count[AA -> B] > 1; th
  --------------------------
 
 6.1 Interestingness of generate
-With the set, we use the algorithm 2 in linear time.
-It is because that with each iteration of the For loop (line 9), the closure increse by 1 corresponding one FD and the FD is applied once.
-However it is not the case if we use the algorithm 1.
+With the set, Algorithm 2 works much effectively than Algorithm 1.
+Explanation:
+With Algorithm 2: each dependency is read only exactly once that it is checked at line 9.
+However, if using Algorithm 1, a dependency could be read many times. Let's consider the For loop at line 5, it checks every funtional dependency but there is only one of them that satisfies the condition at line 6. 
+
 
 
 -------------------------------
