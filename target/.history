@@ -100,3 +100,73 @@ test
 rebuild
 update
 test
+run -improved - A
+update
+ls
+bench:test
+update
+bench:test
+rebuild
+bench:test
+update
+bench:test
+update
+bench:test
+root-build/bench:test
+update
+bench:test
+compiée
+compile
+bench:compile
+compile
+test
+compile
+bench:compile
+test
+bench:test
+update
+bench:bench
+update
+bench:test
+bench:update
+update
+buildDependencies
+update
+bench:test
+update
+bench:t
+bench:test
+update
+bench:test
+clean
+update
+build
+bench:test
+update
+bench:t
+bench:test
+update
+clean com
+clean
+compiée
+compile
+bench:test
+test
+compile
+test
+run -normalize /src/test/resources/generate100.txt 0
+run -normalize src/test/resources/generate100.txt 0
+run -normalize src/test/resources/generate500_shuffle.txt 0
+run -normalize src/test/resources/ex.TD3.txt A
+run -normalize src/test/resources/ex.TD3.txt
+run -normalize src/test/resources/generate100.txt
+run -normalize src/test/resources/generate1000.txt
+run -decompose src/test/resources/ex.CC1.txt
+run -decompose src/test/resources/generate100.txt
+bench:test
+run -decompose src/test/resources/generate100.txt
+run -generate 1
+run -generate 3
+run -decompose src/test/resources/generate200.txt
+run -generate 200 >
+run -decompose src/test/resources/generate200.txt

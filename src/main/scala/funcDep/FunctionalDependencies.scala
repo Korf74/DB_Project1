@@ -1,100 +1,133 @@
 package funcDep
 
-import java.io.{FileReader, BufferedReader}
+import java.io.{BufferedReader, FileReader}
+
+import scala.annotation.tailrec
 import scala.collection.immutable
 import scala.collection.mutable
 
 /**
   * Created by remi on 20/03/17.
   */
-class FunctionalDependencies(private val deps: Map[FunctionalDependencies.Attributes, FunctionalDependencies.Attributes]) {
+class FunctionalDependencies
+  (
+    private val deps: mutable.Map[
+      FunctionalDependencies.Attributes, FunctionalDependencies.Attributes
+    ]
+  ) {
 
   import FunctionalDependencies._
 
-  def getDependencies = deps
+  def this(deps: Map[
+      FunctionalDependencies.Attributes, FunctionalDependencies.Attributes
+    ]
+          ) =
+    this(mutable.Map[
+      FunctionalDependencies.Attributes, FunctionalDependencies.Attributes
+      ](deps.toList: _*))
 
-  private lazy val schema = deps.foldLeft(Set.newBuilder[Attribute])((s, dep) => s ++= (dep._1 ++ dep._2)).result()
+  private lazy val schema =
+    deps
+      .foldLeft(
+        Set.newBuilder[Attribute]
+      )((s, dep) => s ++= (dep._1 ++ dep._2)).result()
 
-  private val closures = mutable.Map.empty[Attributes, Attributes]
+  private lazy val minimized = {
+    closures.filter{ case (x, y) =>
+      !y.subsetOf(computeClosure(closures - x, x))
+    }
+  }
 
-  def check(X: Attributes, Y: Attributes) = Y.subsetOf(closure(X))
+  private lazy val normalized = {
+    val min: mutable.Map[Attributes, Attributes] = minimized.clone()
 
-  def isKey(X: Attributes) = check(X, schema)
+    min.foreach{ case (x, y) =>
 
-  def closure(X: Attributes) = closures.getOrElseUpdate(X, FunctionalDependencies.closure(this, X))
+      val W = mutable.Set[Attribute](y.toList: _*)
 
-  def isBCNF(R: Attributes) = {
+      val G = min.clone()
+
+      y.foreach{ a =>
+        G.update(x, (W - a).toSet)
+
+        if(y.subsetOf(computeClosure(G, x))) {
+          W -= a
+        }
+      }
+
+      min.update(x, W.toSet)
+    }
+
+    min
+  }
+
+  private lazy val closures: mutable.Map[Attributes, Attributes] = deps
+    .map(x => (x._1, computeClosure(deps, x._1).toSet))
+
+  def update(x: Attributes, y: Attributes): Unit = deps.update(x, y)
+
+  def getSchema: Set[Attribute] = schema
+
+  def getDependencies: Map[Attributes, Attributes] = deps.toMap
+
+  def getClosures: Map[Attributes, Attributes] = closures.toMap
+
+  def setClosure(x: Attributes, y: Attributes): Unit = closures.update(x, y)
+
+  def check(X: Attributes, Y: Attributes): Boolean = Y.subsetOf(closure(X))
+
+  def isKey(X: Attributes): Boolean = check(X, schema)
+
+  def closure(X: Attributes): Attributes =
+    closures.getOrElseUpdate(X, computeClosure(deps, X).toSet)
+
+  def isBCNF(R: Attributes): Boolean = {
     deps
       .filter { case (x, y) => x.subsetOf(R) && y.subsetOf(R) }
-      .forall { case (x, y) =>  y.subsetOf(x) || FunctionalDependencies.isKey(this, x, R) }
+      .forall { case (x, y) =>  y.subsetOf(x) || R.subsetOf(closure(x)) }
   }
 
   def decompose(): Set[Attributes] = decompose(schema)
 
   private def decompose(schema: Attributes) = {
-    val F = normalize()
-    val R = mutable.Set[Attributes](schema)
+    val F = FunctionalDependencies(normalized)
+    val R = mutable.Set[Attributes]()
+    val decomposed = Set.newBuilder[Attributes]
 
-    while(R.exists(!F.isBCNF(_))) {
+    if(isBCNF(schema)) {
+      decomposed += schema
+    } else {
+      R += schema
+    }
 
-      val r = R.find(!isBCNF(_)).get
+// supress bcnfs to not retest them
+    while(R.nonEmpty) {
+
+      val r = R.head
 
       val X = F.getDependencies
-        .find{ case (x, y) => x.subsetOf(r) && y.subsetOf(r) && !FunctionalDependencies.isKey(F, x, r) }
+        .find{ case (x, y) => x.subsetOf(r) && y.subsetOf(r) &&
+          !FunctionalDependencies.isKey(F, x, r)
+        }
         .get._1
 
-      val X_+ = FunctionalDependencies.closure(F, X)
+      val X_+ = closure(X)
 
-      println("r : "+r)
-      println("X :"+X)
 
-      val newR = mutable.Set[Attributes](X_+, (r -- X_+) ++ X)
+      val (newR, done) = mutable.Set[Attributes](X_+, (r -- X_+) ++ X)
+        .span(!isBCNF(_))
 
       (R -= r) ++= newR
+      decomposed ++= done
 
     }
 
-    R.toSet
+    decomposed.result()
   }
 
-  def minimize() = {
-    val G: mutable.Map[Attributes, Attributes] = mutable.HashMap[Attributes, Attributes](deps.toList: _*)
-      .map(dep => (dep._1, closure(dep._1)))
+  def minimize(): Map[Attributes, Attributes] = minimized.toMap
 
-    for {
-      (x, x_+) <- G
-    } yield {
-      if(FunctionalDependencies.check(G - (x, x_+), x, x_+)) {
-        G -= x
-      }
-    }
-    FunctionalDependencies(G)
-  }
-
-  def reduce() = {
-    val min: mutable.Map[Attributes, Attributes] = mutable.HashMap[Attributes, Attributes](deps.toList: _*)
-
-    min.foreach{ case (x, y) =>
-
-        val W = mutable.Set[Attribute](y.toList: _*)
-
-        val G = min.clone()
-
-        y.foreach{ a =>
-          G.update(x, (W - a).toSet)
-
-          if(FunctionalDependencies.check(G, x, y)) {
-            W -= a
-          }
-        }
-
-      min.update(x, W.toSet)
-    }
-
-    FunctionalDependencies(min)
-  }
-
-  def normalize() = minimize().reduce()
+  def normalize(): Map[Attributes, Attributes] = normalized.toMap
 
   override def toString: String = {
     val s = new StringBuilder
@@ -107,6 +140,38 @@ class FunctionalDependencies(private val deps: Map[FunctionalDependencies.Attrib
     }
 
     s.result()
+  }
+
+  def computeClosure(fd: mutable.Map[Attributes, Attributes],
+                     atts: Attributes): mutable.Set[Attribute] = {
+
+    val count: mutable.Map[FuncDep, Int] = fd
+      .map{case (w, z) => ((w, z), w.size)}
+
+    val list: Map[Attribute, Set[FuncDep]] = fd
+      .toList
+      .flatMap{case (w, z) => w.map((_, (w, z)))}
+      .groupBy(_._1)
+      .mapValues(v => v.map(_._2).toSet)
+
+    val Cl = mutable.Set[Attribute](atts.toList: _*)
+
+    val update = Cl.clone()
+
+    while(update.nonEmpty) {
+      val A = update.head
+      update -= A
+      list.getOrElse(A, Set.empty[FuncDep]).foreach { dep =>
+        if(count(dep) == 1) {
+          update ++= (dep._2 -- Cl)
+          Cl ++= dep._2
+        } else {
+          count(dep) -= 1
+        }
+      }
+    }
+
+    Cl
   }
 
 }
@@ -139,14 +204,24 @@ object FunctionalDependencies {
 
   def isBCNF(sigma: FunctionalDependencies, R: Attributes) = sigma.isBCNF(R)
 
-  def isKey(sigma: FunctionalDependencies, X: Attributes, R: Attributes) = R.subsetOf(closure(sigma, X))
+  def isKey(sigma: FunctionalDependencies, X: Attributes, R: Attributes) =
+    R.subsetOf(closure(sigma, X))
 
   def schema(sigma: FunctionalDependencies) = sigma.schema
 
-  def check(sigma: FunctionalDependencies, X: Attributes, Y: Attributes): Boolean = sigma.check(X, Y)
+  def check(sigma: FunctionalDependencies, X: Attributes, Y: Attributes): Boolean =
+    sigma.check(X, Y)
 
-  private def check(sigma: mutable.Map[Attributes, Attributes], X: Attributes, Y: Attributes): Boolean =
+  private def check(sigma: mutable.Map[Attributes, Attributes],
+                    X: Attributes, Y: Attributes): Boolean =
     FunctionalDependencies(sigma).check(X, Y)
+
+  private def check(sigma: mutable.Map[Attributes, Attributes],
+                    X: Attributes, Y: Attributes,
+                    closures: mutable.Map[Attributes, Attributes]) = {
+    val cl = closures.getOrElseUpdate(X, algo2(sigma.toMap, X))
+    Y.subsetOf(cl)
+  }
 
   def normalize(path: String) = {
     val sigma = newFromFile(path)
@@ -171,7 +246,10 @@ object FunctionalDependencies {
   def generate(n: Int) = {
     val fd = newBuilder()
 
-    fd ++= (0 until n).map(i => (Attributes.singletonAttributes(i), Attributes.singletonAttributes(i + 1)))
+    fd ++= (0 until n)
+      .map(
+        i => (Attributes.singletonAttributes(i), Attributes.singletonAttributes(i + 1))
+      )
 
     fd.result()
   }
@@ -209,7 +287,10 @@ object FunctionalDependencies {
       if (!s.isEmpty && s.charAt(0) != '#') {
         val (k, v) = s.split(" ").filter(!_.isEmpty).span(_ != "->")
 
-        fd += ((k.map(new Attribute(_)).toSet, v.filter(_ != "->").map(new Attribute(_)).toSet))
+        fd += (
+          (k.map(Attribute(_)).toSet,
+            v.filter(_ != "->").map(Attribute(_)).toSet)
+          )
       }
 
       s = in.readLine()
@@ -222,7 +303,8 @@ object FunctionalDependencies {
   def algo1(fd: FunctionalDependencies, atts: Attributes): immutable.Set[Attribute] =
     algo1(fd.getDependencies, atts)
 
-  def algo1(fd: immutable.Map[Attributes, Attributes], atts: Attributes): immutable.Set[Attribute] = {
+  def algo1(fd: immutable.Map[Attributes, Attributes],
+            atts: Attributes): immutable.Set[Attribute] = {
     val Cl = mutable.HashSet[Attribute](atts.toList: _*)
 
     var done = false
@@ -240,13 +322,13 @@ object FunctionalDependencies {
     Cl.toSet
   }
 
-  def algo2(fd: FunctionalDependencies, atts: Attributes): immutable.Set[Attribute] =
+  def algo2(fd: FunctionalDependencies, atts: Attributes): Set[Attribute] =
     algo2(fd.getDependencies, atts)
 
-  def algo2(fd: immutable.Map[Attributes, Attributes], atts: Attributes): immutable.Set[Attribute] = {
+  def algo2(fd: Map[Attributes, Attributes], atts: Attributes): Set[Attribute] = {
 
-    val count: mutable.HashMap[FuncDep, Int] = new mutable.HashMap[FuncDep, Int]
-    count ++= fd.map{case (w, z) => ((w, z), w.size)}
+    val count: mutable.Map[FuncDep, Int] =
+      mutable.Map[FuncDep, Int](fd.map{case (w, z) => ((w, z), w.size)}.toList: _*)
 
     val list: Map[Attribute, Set[FuncDep]] = fd
       .toList
@@ -254,14 +336,14 @@ object FunctionalDependencies {
       .groupBy(_._1)
       .mapValues(v => v.map(_._2).toSet)
 
-    val Cl = mutable.HashSet[Attribute](atts.toList: _*)
+    val Cl = mutable.Set[Attribute](atts.toList: _*)
 
-    val update = mutable.HashSet[Attribute](atts.toList: _*)
+    val update = Cl.clone()
 
     while(update.nonEmpty) {
       val A = update.head
       update -= A
-      list.getOrElse(A, Set.empty[FuncDep]).foreach { case dep =>
+      list.getOrElse(A, Set.empty[FuncDep]).foreach { dep =>
         count(dep) -= 1
         if(count(dep) == 0) {
           update ++= (dep._2 -- Cl)

@@ -1,23 +1,34 @@
 import Dependencies._
 
-lazy val root = (project in file(".")).
-  settings(
-    inThisBuild(List(
-      organization := "com.example",
-      scalaVersion := "2.12.1",
-      version      := "0.1.0-SNAPSHOT"
-    )),
-    name := "Hello",
-    libraryDependencies += scalaTest % Test
+lazy val Benchmark = config("bench") extend Test
 
+/**  This allows running ScalaMeter benchmarks in separate sbt configuration.
+  *  It means, that when you want run your benchmarks you should type `bench:test` in sbt console.
+  */
+lazy val basic = Project(
+  "root-build",
+  file("."),
+  settings = Defaults.coreDefaultSettings ++ Seq(
+    name := "DB_Project1",
+    organization := "",
+    scalaVersion := "2.11.1",
+    scalacOptions ++= Seq("-deprecation", "-unchecked", "-feature", "-Xlint"),
+    publishArtifact := false,
+    libraryDependencies ++= Seq(
+      scalaTest % Test,
+      scalaMeter % "bench",
+      scalaMeterCore % "bench"
+    ),
+    resolvers ++= Seq(
+      "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
+      "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases"
+    ),
+    testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
+    parallelExecution in Benchmark := false,
+    logBuffered := false
   )
-
-/*
-resolvers += "Sonatype OSS Snapshots" at
-  "https://oss.sonatype.org/content/repositories/releases"
-
-libraryDependencies += "com.storm-enroute" %% "scalameter" % "0.7"
-
-testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework")
-
-parallelExecution in Test := false*/
+) configs(
+  Benchmark
+  ) settings(
+  inConfig(Benchmark)(Defaults.testSettings): _*
+  )

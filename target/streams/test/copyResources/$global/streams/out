@@ -1,10 +1,10 @@
 [0m[[0mdebug[0m] [0mCopy resource mappings: [0m
-[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/generate5.txt,/home/remi/ENS/DBDM/project1/target/scala-2.12/test-classes/generate5.txt)[0m
-[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/ex.CC1.txt,/home/remi/ENS/DBDM/project1/target/scala-2.12/test-classes/ex.CC1.txt)[0m
-[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/test.txt,/home/remi/ENS/DBDM/project1/target/scala-2.12/test-classes/test.txt)[0m
-[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/generate500_ext.txt,/home/remi/ENS/DBDM/project1/target/scala-2.12/test-classes/generate500_ext.txt)[0m
-[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/generate100.txt,/home/remi/ENS/DBDM/project1/target/scala-2.12/test-classes/generate100.txt)[0m
-[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/ex.TD3.txt,/home/remi/ENS/DBDM/project1/target/scala-2.12/test-classes/ex.TD3.txt)[0m
-[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/CCF2015P.txt,/home/remi/ENS/DBDM/project1/target/scala-2.12/test-classes/CCF2015P.txt)[0m
-[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/generate500_shuffle.txt,/home/remi/ENS/DBDM/project1/target/scala-2.12/test-classes/generate500_shuffle.txt)[0m
-[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/generate1000.txt,/home/remi/ENS/DBDM/project1/target/scala-2.12/test-classes/generate1000.txt)[0m
+[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/generate5.txt,/home/remi/ENS/DBDM/project1/target/scala-2.11/test-classes/generate5.txt)[0m
+[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/ex.CC1.txt,/home/remi/ENS/DBDM/project1/target/scala-2.11/test-classes/ex.CC1.txt)[0m
+[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/test.txt,/home/remi/ENS/DBDM/project1/target/scala-2.11/test-classes/test.txt)[0m
+[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/generate500_ext.txt,/home/remi/ENS/DBDM/project1/target/scala-2.11/test-classes/generate500_ext.txt)[0m
+[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/generate100.txt,/home/remi/ENS/DBDM/project1/target/scala-2.11/test-classes/generate100.txt)[0m
+[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/ex.TD3.txt,/home/remi/ENS/DBDM/project1/target/scala-2.11/test-classes/ex.TD3.txt)[0m
+[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/CCF2015P.txt,/home/remi/ENS/DBDM/project1/target/scala-2.11/test-classes/CCF2015P.txt)[0m
+[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/generate500_shuffle.txt,/home/remi/ENS/DBDM/project1/target/scala-2.11/test-classes/generate500_shuffle.txt)[0m
+[0m[[0mdebug[0m] [0m	(/home/remi/ENS/DBDM/project1/src/test/resources/generate1000.txt,/home/remi/ENS/DBDM/project1/target/scala-2.11/test-classes/generate1000.txt)[0m
