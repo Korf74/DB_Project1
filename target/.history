@@ -170,3 +170,41 @@ run -generate 3
 run -decompose src/test/resources/generate200.txt
 run -generate 200 >
 run -decompose src/test/resources/generate200.txt
+test
+test:assembly
+bench:assembly
+compile
+test:compile
+reload
+test:assembly
+bench:test
+compile
+run -closures src/test/resources/ex.CC1.txt
+run -minimize src/test/resources/ex.CC1.txt
+run -decompose src/test/resources/ex.CC1.txt
+run -normalize src/test/resources/ex.CC1.txt
+run -minimize src/test/resources/ex.CC1.txt
+run -normalize src/test/resources/ex.CC1.txt
+run -decompose src/test/resources/ex.CC1.txt
+run -normalize src/test/resources/ex.CC1.txt
+run -decompose src/test/resources/ex.CC1.txt
+run -normalize src/test/resources/ex.CC1.txt
+run -decompose src/test/resources/ex.CC1.txt
+run -normalize src/test/resources/ex.CC1.txt
+run -decompose src/test/resources/ex.CC1.txt
+run -decompose src/test/resources/.txt
+run -decompose src/test/resources/generate100.txt
+test
+run -normalize src/test/resources/ex.CC1.txt
+run -decompose src/test/resources/generate100.txt
+run -decompose src/test/resources/generate200.txt
+run -normalize src/test/resources/generate1000.txt
+run -generate 100
+run -normalize x
+run -normalize src/test/resources/generate1000.txt
+run -normalize src/test/resources/generate100.txt
+run -decompose src/test/resources/generate100.txt
+run -decompose src/test/resources/generate5.txt
+run -decompose src/test/resources/ex.CC1.txt
+test
+clean

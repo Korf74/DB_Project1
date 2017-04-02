@@ -82,7 +82,7 @@ class tests extends FunSuite {
 
   test("minimize") {
     generates.foreach { fd =>
-      assert(fd.minimize().forall {
+      assert(fd.minimize().getDependencies.forall {
         case (x, y) => y == fd.closure(x)
       })
     }
@@ -91,8 +91,9 @@ class tests extends FunSuite {
   test("normalization") {
     generates.foreach { fd =>
       val normalized = fd.normalize()
-      assert(normalized.forall {
+      assert(normalized.getDependencies.forall {
         case(x, y) =>
+          x.size == 1 && y.size == 1 &&
           Integer.parseInt(x.head.getName()) == Integer.parseInt(y.head.getName()) - 1
       })
     }
@@ -101,8 +102,10 @@ class tests extends FunSuite {
   test("decompose") {
     generates.foreach { fd =>
       val decomposed = fd.decompose()
-      assert(decomposed.forall(fd.isBCNF))
-      assert(decomposed.reduceLeft((a, b) => a ++ b) == fd.getSchema)
+      assert(decomposed.foldLeft(
+        Set.newBuilder[Attribute]
+      )((a, b) => a ++= b.getSchema).result() == fd.getSchema)
+      assert(decomposed.forall(_.isBCNF))
     }
   }
 

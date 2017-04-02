@@ -1,5 +1,9 @@
 import Dependencies._
 
+Project.inConfig(Test)(baseAssemblySettings)
+
+assemblyJarName in (Test, assembly) := s"${name.value}-test-${version.value}.jar"
+
 lazy val Benchmark = config("bench") extend Test
 
 /**  This allows running ScalaMeter benchmarks in separate sbt configuration.

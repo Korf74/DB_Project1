@@ -80,14 +80,20 @@ class FunctionalDependencies
 
   def closure(X: Attributes): Attributes =
     closures.getOrElseUpdate(X, computeClosure(deps, X).toSet)
-
+/*
   def isBCNF(R: Attributes): Boolean = {
     deps
       .filter { case (x, y) => x.subsetOf(R) && y.subsetOf(R) }
       .forall { case (x, y) =>  y.subsetOf(x) || R.subsetOf(closure(x)) }
-  }
+  }*/
 
-  def decompose(): Set[Attributes] = decompose(schema)
+  private lazy val checkBCNF = deps
+    .forall { case (x, y) =>  y.subsetOf(x) || schema.subsetOf(closure(x)) }
+
+
+  def isBCNF = checkBCNF
+
+ /* def decompose(): Set[Attributes] = decompose(schema)
 
   private def decompose(schema: Attributes) = {
     val F = FunctionalDependencies(normalized)
@@ -100,7 +106,6 @@ class FunctionalDependencies
       R += schema
     }
 
-// supress bcnfs to not retest them
     while(R.nonEmpty) {
 
       val r = R.head
@@ -123,19 +128,52 @@ class FunctionalDependencies
     }
 
     decomposed.result()
+  }*/
+
+  def decompose(): Set[FunctionalDependencies] = {
+    val F = FunctionalDependencies(normalized)
+    val (decomposed, invalid) = mutable.Set[FunctionalDependencies](F).span(_.isBCNF)
+
+    while(invalid.nonEmpty) {
+
+      val r = invalid.head
+
+      val deps = r.getDependencies
+
+      val fd = deps.find{case (x, y) => y.subsetOf(x) || !r.isKey(x)}.get
+
+      val (schema1, schema2) =
+        (r.closure(fd._1), (r.schema -- r.closure(fd._1)) ++ fd._1)
+
+      val split = List(
+        FunctionalDependencies(deps.filter{ case (x, y) =>
+          (x ++ y) subsetOf schema1
+        }),
+        FunctionalDependencies(deps.filter{ case (x, y) =>
+          (x ++ y) subsetOf schema2
+        })
+      )
+
+      decomposed ++= split.filter(_.isBCNF)
+      (invalid -= r) ++= split.filter(!_.isBCNF)
+
+    }
+
+    decomposed.toSet
+
   }
 
-  def minimize(): Map[Attributes, Attributes] = minimized.toMap
+  def minimize(): FunctionalDependencies = FunctionalDependencies(minimized.toMap)
 
-  def normalize(): Map[Attributes, Attributes] = normalized.toMap
+  def normalize(): FunctionalDependencies = FunctionalDependencies(normalized.toMap)
 
   override def toString: String = {
     val s = new StringBuilder
 
     deps.foreach{ case (from, to) =>
-      from.foreach(s ++= _.toString()+" ")
+      from.foreach(s ++= _.toString+" ")
       s ++= "->"
-      to.foreach(s ++= " "+_.toString())
+      to.foreach(s ++= " "+_.toString)
       s += '\n'
     }
 
@@ -202,7 +240,7 @@ object FunctionalDependencies {
 
   def apply(deps: Map[Attributes, Attributes]) = new FunctionalDependencies(deps)
 
-  def isBCNF(sigma: FunctionalDependencies, R: Attributes) = sigma.isBCNF(R)
+  //def isBCNF(sigma: FunctionalDependencies, R: Attributes) = sigma.isBCNF(R)
 
   def isKey(sigma: FunctionalDependencies, X: Attributes, R: Attributes) =
     R.subsetOf(closure(sigma, X))

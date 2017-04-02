@@ -30,7 +30,7 @@ object Main {
           val n = Integer.parseInt(args(1))
           println(FunctionalDependencies.generate(n))
         } catch {
-          case e: NumberFormatException => throw new IllegalArgumentException("You must enter an integer")
+          case _: NumberFormatException => throw new IllegalArgumentException("You must enter an integer")
         }
       case "-normalize" =>
         args(1) match {
@@ -39,11 +39,31 @@ object Main {
         }
       case "-decompose" =>
         args(1) match {
-          case "-" => println(FunctionalDependencies.decompose())
-          case path => println(FunctionalDependencies.decompose(path))
+          case "-" => printDecomposed(FunctionalDependencies.decompose())
+          case path => printDecomposed(FunctionalDependencies.decompose(path))
+        }
+      case "-closures" =>
+        args(1) match {
+          case "-" => println(FunctionalDependencies.newFromStdin.getClosures)
+          case path => println(FunctionalDependencies.newFromFile(path).getClosures)
+        }
+      case "-minimize" =>
+        args(1) match {
+          case "-" => println(FunctionalDependencies.newFromStdin.minimize())
+          case path => println(FunctionalDependencies.newFromFile(path).minimize())
         }
 
       case _ => throw new IllegalArgumentException("wrong argument : "+args(1))
+    }
+  }
+
+  def printDecomposed(decomposed: Set[FunctionalDependencies]): Unit = {
+    println("Decomposed tables :\n")
+    decomposed.foreach { fd =>
+      println("Schema : ")
+      fd.getSchema.foreach(att => print(att + " "))
+      println()
+      println("Dependencies : \n"+fd)
     }
   }
 
