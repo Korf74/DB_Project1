@@ -28,7 +28,7 @@ lazy val basic = Project(
       "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases"
     ),
     testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
-    parallelExecution in Benchmark := false,
+    //parallelExecution in Benchmark := false,
     logBuffered := false
   )
 ) configs(

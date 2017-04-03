@@ -8,9 +8,7 @@ import org.scalatest._
 class tests extends FunSuite {
 
   lazy val generates: List[FunctionalDependencies] =
-    List(1, 10, 50, 100/*, 500, 1000*/).map(FunctionalDependencies.generate)
-
-  val generate200: FunctionalDependencies = FunctionalDependencies.generate(200)
+    List(1, 10, 50, 100).map(FunctionalDependencies.generate)
 
   lazy val examples: List[FunctionalDependencies] = List(
     "ex.CC1.txt",
@@ -75,13 +73,22 @@ class tests extends FunSuite {
     val X3 = Attributes.empty
     val Y3 = Attributes.empty
 
-    assert(check(sigma, X1, Y1))
-    assert(check(sigma, X2, Y2))
-    assert(check(sigma, X3, Y3))
+    assert(sigma.check(X1, Y1))
+    assert(sigma.check(X2, Y2))
+    assert(sigma.check(X3, Y3))
+  }
+
+  test("corner-case") {
+
+    val (x, y) = (Set.empty[Attribute], Attributes.singletonAttributes("A"))
+
+    val sigma = FunctionalDependencies(Map(x -> y))
+
+    assert(sigma.closure(x) == y)
   }
 
   test("minimize") {
-    generates.foreach { fd =>
+    (generates ++ examples).foreach { fd =>
       assert(fd.minimize().getDependencies.forall {
         case (x, y) => y == fd.closure(x)
       })
@@ -100,7 +107,7 @@ class tests extends FunSuite {
   }
 
   test("decompose") {
-    generates.foreach { fd =>
+    (generates ++ examples).foreach { fd =>
       val decomposed = fd.decompose()
       assert(decomposed.foldLeft(
         Set.newBuilder[Attribute]

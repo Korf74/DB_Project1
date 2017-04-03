@@ -2,7 +2,6 @@ package funcDep
 
 import java.io.{BufferedReader, FileReader}
 
-import scala.annotation.tailrec
 import scala.collection.immutable
 import scala.collection.mutable
 
@@ -11,46 +10,40 @@ import scala.collection.mutable
   */
 class FunctionalDependencies
   (
-    private val deps: mutable.Map[
+    private[this] val deps: mutable.Map[
       FunctionalDependencies.Attributes, FunctionalDependencies.Attributes
-    ]
-  ) {
+    ]) {
 
   import FunctionalDependencies._
 
   def this(deps: Map[
       FunctionalDependencies.Attributes, FunctionalDependencies.Attributes
-    ]
-          ) =
+    ]) =
     this(mutable.Map[
       FunctionalDependencies.Attributes, FunctionalDependencies.Attributes
       ](deps.toList: _*))
 
-  private lazy val schema =
-    deps
-      .foldLeft(
+  private[this] lazy val schema: Set[Attribute] =
+      deps.foldLeft(
         Set.newBuilder[Attribute]
       )((s, dep) => s ++= (dep._1 ++ dep._2)).result()
 
-  private lazy val minimized = {
-    closures.filter{ case (x, y) =>
-      !y.subsetOf(computeClosure(closures - x, x))
-    }
+  private[this] lazy val minimized: mutable.Map[Attributes, Attributes] = {
+    closures.par.filterNot{ case (x, y) =>
+      y.subsetOf(computeClosure(closures - x, x))
+    }.seq
   }
 
-  private lazy val normalized = {
+  private[this] lazy val normalized = {
     val min: mutable.Map[Attributes, Attributes] = minimized.clone()
 
-    min.foreach{ case (x, y) =>
+    minimized.foreach{ case (x, y) =>
 
       val W = mutable.Set[Attribute](y.toList: _*)
 
-      val G = min.clone()
-
       y.foreach{ a =>
-        G.update(x, (W - a).toSet)
 
-        if(y.subsetOf(computeClosure(G, x))) {
+        if(y.subsetOf(computeClosure(min.updated(x, (W - a).toSet), x))) {
           W -= a
         }
       }
@@ -61,10 +54,10 @@ class FunctionalDependencies
     min
   }
 
-  private lazy val closures: mutable.Map[Attributes, Attributes] = deps
+  private[this] lazy val closures: mutable.Map[Attributes, Attributes] = deps
+    .par
     .map(x => (x._1, computeClosure(deps, x._1).toSet))
-
-  def update(x: Attributes, y: Attributes): Unit = deps.update(x, y)
+    .seq
 
   def getSchema: Set[Attribute] = schema
 
@@ -72,63 +65,19 @@ class FunctionalDependencies
 
   def getClosures: Map[Attributes, Attributes] = closures.toMap
 
-  def setClosure(x: Attributes, y: Attributes): Unit = closures.update(x, y)
-
   def check(X: Attributes, Y: Attributes): Boolean = Y.subsetOf(closure(X))
 
   def isKey(X: Attributes): Boolean = check(X, schema)
 
   def closure(X: Attributes): Attributes =
-    closures.getOrElseUpdate(X, computeClosure(deps, X).toSet)
-/*
-  def isBCNF(R: Attributes): Boolean = {
-    deps
-      .filter { case (x, y) => x.subsetOf(R) && y.subsetOf(R) }
-      .forall { case (x, y) =>  y.subsetOf(x) || R.subsetOf(closure(x)) }
-  }*/
+    if(X.isEmpty) FunctionalDependencies.algo1(this, X)
+    else closures.getOrElseUpdate(X, computeClosure(deps, X).toSet)
 
-  private lazy val checkBCNF = deps
+  private[this] lazy val checkBCNF = deps
     .forall { case (x, y) =>  y.subsetOf(x) || schema.subsetOf(closure(x)) }
 
 
   def isBCNF = checkBCNF
-
- /* def decompose(): Set[Attributes] = decompose(schema)
-
-  private def decompose(schema: Attributes) = {
-    val F = FunctionalDependencies(normalized)
-    val R = mutable.Set[Attributes]()
-    val decomposed = Set.newBuilder[Attributes]
-
-    if(isBCNF(schema)) {
-      decomposed += schema
-    } else {
-      R += schema
-    }
-
-    while(R.nonEmpty) {
-
-      val r = R.head
-
-      val X = F.getDependencies
-        .find{ case (x, y) => x.subsetOf(r) && y.subsetOf(r) &&
-          !FunctionalDependencies.isKey(F, x, r)
-        }
-        .get._1
-
-      val X_+ = closure(X)
-
-
-      val (newR, done) = mutable.Set[Attributes](X_+, (r -- X_+) ++ X)
-        .span(!isBCNF(_))
-
-      (R -= r) ++= newR
-      decomposed ++= done
-
-    }
-
-    decomposed.result()
-  }*/
 
   def decompose(): Set[FunctionalDependencies] = {
     val F = FunctionalDependencies(normalized)
@@ -140,18 +89,32 @@ class FunctionalDependencies
 
       val deps = r.getDependencies
 
-      val fd = deps.find{case (x, y) => y.subsetOf(x) || !r.isKey(x)}.get
+      val fd = deps.find{case (x, y) => !y.subsetOf(x) && !r.isKey(x)}.get
 
       val (schema1, schema2) =
-        (r.closure(fd._1), (r.schema -- r.closure(fd._1)) ++ fd._1)
+        (closure(fd._1), (r.getSchema -- closure(fd._1)) ++ fd._1)
 
       val split = List(
-        FunctionalDependencies(deps.filter{ case (x, y) =>
-          (x ++ y) subsetOf schema1
-        }),
-        FunctionalDependencies(deps.filter{ case (x, y) =>
-          (x ++ y) subsetOf schema2
-        })
+        FunctionalDependencies(
+          deps
+            .par
+            .map{ case(x, y) =>
+              (x.intersect(schema1), y.intersect(schema1))
+            }
+            .filter{ case (x, y) =>
+              x.nonEmpty && y.nonEmpty && x.subsetOf(schema1)
+            }
+            .seq),
+        FunctionalDependencies(
+          deps
+            .par
+            .map{ case(x, y) =>
+              (x.intersect(schema2), y.intersect(schema2))
+            }
+            .filter{ case (x, y) =>
+              x.nonEmpty && y.nonEmpty &&  x.subsetOf(schema2)
+            }
+            .seq)
       )
 
       decomposed ++= split.filter(_.isBCNF)
@@ -187,6 +150,7 @@ class FunctionalDependencies
       .map{case (w, z) => ((w, z), w.size)}
 
     val list: Map[Attribute, Set[FuncDep]] = fd
+      .view
       .toList
       .flatMap{case (w, z) => w.map((_, (w, z)))}
       .groupBy(_._1)
@@ -240,26 +204,6 @@ object FunctionalDependencies {
 
   def apply(deps: Map[Attributes, Attributes]) = new FunctionalDependencies(deps)
 
-  //def isBCNF(sigma: FunctionalDependencies, R: Attributes) = sigma.isBCNF(R)
-
-  def isKey(sigma: FunctionalDependencies, X: Attributes, R: Attributes) =
-    R.subsetOf(closure(sigma, X))
-
-  def schema(sigma: FunctionalDependencies) = sigma.schema
-
-  def check(sigma: FunctionalDependencies, X: Attributes, Y: Attributes): Boolean =
-    sigma.check(X, Y)
-
-  private def check(sigma: mutable.Map[Attributes, Attributes],
-                    X: Attributes, Y: Attributes): Boolean =
-    FunctionalDependencies(sigma).check(X, Y)
-
-  private def check(sigma: mutable.Map[Attributes, Attributes],
-                    X: Attributes, Y: Attributes,
-                    closures: mutable.Map[Attributes, Attributes]) = {
-    val cl = closures.getOrElseUpdate(X, algo2(sigma.toMap, X))
-    Y.subsetOf(cl)
-  }
 
   def normalize(path: String) = {
     val sigma = newFromFile(path)
@@ -360,41 +304,8 @@ object FunctionalDependencies {
     Cl.toSet
   }
 
-  def algo2(fd: FunctionalDependencies, atts: Attributes): Set[Attribute] =
-    algo2(fd.getDependencies, atts)
-
-  def algo2(fd: Map[Attributes, Attributes], atts: Attributes): Set[Attribute] = {
-
-    val count: mutable.Map[FuncDep, Int] =
-      mutable.Map[FuncDep, Int](fd.map{case (w, z) => ((w, z), w.size)}.toList: _*)
-
-    val list: Map[Attribute, Set[FuncDep]] = fd
-      .toList
-      .flatMap{case (w, z) => w.map((_, (w, z)))}
-      .groupBy(_._1)
-      .mapValues(v => v.map(_._2).toSet)
-
-    val Cl = mutable.Set[Attribute](atts.toList: _*)
-
-    val update = Cl.clone()
-
-    while(update.nonEmpty) {
-      val A = update.head
-      update -= A
-      list.getOrElse(A, Set.empty[FuncDep]).foreach { dep =>
-        count(dep) -= 1
-        if(count(dep) == 0) {
-          update ++= (dep._2 -- Cl)
-          Cl ++= dep._2
-        }
-      }
-    }
-
-    Cl.toSet
-  }
-
   def closure(fd: FunctionalDependencies, atts: Attributes) = {
-    algo2(fd, atts)
+    fd.closure(atts)
   }
 
   def closure1(atts: Attributes, path: String) =  {
@@ -409,12 +320,12 @@ object FunctionalDependencies {
 
   def closure2(atts: Attributes, path: String) =  {
     val fd = newFromFile(path)
-    algo2(fd, atts)
+    fd.closure(atts)
   }
 
   def closure2(atts: Attributes) = {
     val fd = newFromStdin
-    algo2(fd, atts)
+    fd.closure(atts)
   }
 
   type Attributes = Set[Attribute]
